@@ -1,0 +1,11 @@
+displayName: Password Protect Traefik Plugin
+type: middleware
+
+import: github.com/LaurenceJJones/password-protect-traefik-plugin
+
+summary: Middleware plugin to protect a service with a password similar to Vercel preview protection 
+
+testData:
+  LoginHTMLPath: /etc/traefik/login.html
+  Password: password
+

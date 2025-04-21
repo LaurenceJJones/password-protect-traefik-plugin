@@ -1,0 +1,43 @@
+services:
+  traefik:
+    image: "traefik:v3.3.6"
+    container_name: "traefik"
+    restart: unless-stopped
+    command:
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+
+      - "--experimental.localplugins.password-protect.modulename=github.com/LaurenceJJones/password-protect-traefik-plugin"
+    volumes:
+      - /run/user/1000/podman/podman.sock:/var/run/docker.sock:ro
+      - './templates/dist/login.html:/login.html:ro'
+      - ./:/plugins-local/src/github.com/LaurenceJJones/password-protect-traefik-plugin
+    ports:
+      - 8000:80
+
+  whoami-foo:
+    image: traefik/whoami
+    container_name: "simple-service-foo"
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.router-foo.rule=PathPrefix(`/foo`)"
+      - "traefik.http.routers.router-foo.entrypoints=web"
+      - "traefik.http.services.service-foo.loadbalancer.server.port=80"
+      - "traefik.http.routers.router-foo.middlewares=password-protect@docker"
+      - "traefik.http.middlewares.password-protect.plugin.password-protect.password=password"
+
+  whoami2:
+    image: traefik/whoami
+    container_name: "simple-service-bar"
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.router-bar.rule=PathPrefix(`/bar`)"
+      - "traefik.http.routers.router-bar.entrypoints=web"
+      - "traefik.http.services.service-bar.loadbalancer.server.port=80"
+      - "traefik.http.routers.router-bar.middlewares=password-protect2@docker"
+      - "traefik.http.middlewares.password-protect2.plugin.password-protect.password=password123"
