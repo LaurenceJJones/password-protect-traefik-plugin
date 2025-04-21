@@ -82,8 +82,8 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
 
-      - "--experimental.plugins.bouncer.modulename=github.com/LaurenceJJones/password-protect-traefik-plugin"
-      - "--experimental.plugins.bouncer.version=v0.0.3"
+      - "--experimental.plugins.password-protect.modulename=github.com/LaurenceJJones/password-protect-traefik-plugin"
+      - "--experimental.plugins.password-protect.version=v0.0.3"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - './login.html:/login.html:ro'
