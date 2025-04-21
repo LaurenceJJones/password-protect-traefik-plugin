@@ -33,9 +33,7 @@ const (
 
 // CreateConfig creates and initializes the plugin configuration
 func CreateConfig() *Config {
-	return &Config{
-		LoginHTMLPath: defaultLoginHTMLPath,
-	}
+	return &Config{}
 }
 
 // PasswordProtect contains the plugin configuration and implementation
@@ -43,23 +41,29 @@ type PasswordProtect struct {
 	config *Config
 	next   http.Handler
 	tmpl   *template.Template
+	valid  bool
 }
 
 // New creates a new PasswordProtect plugin
 func New(ctx context.Context, next http.Handler, config *Config, name string) (http.Handler, error) {
-	// Use default path if not provided
 	if config.LoginHTMLPath == "" {
 		config.LoginHTMLPath = defaultLoginHTMLPath
 	}
 
-	// Read the login HTML file
-	loginHTMLBytes, err := os.ReadFile(config.LoginHTMLPath)
+	if _, err := os.Stat(config.LoginHTMLPath); os.IsNotExist(err) {
+		return &PasswordProtect{
+			config: config,
+			next:   next,
+			valid:  false,
+		}, nil
+	}
+
+	LoginHTMLBytes, err := os.ReadFile(config.LoginHTMLPath)
 	if err != nil {
 		return nil, fmt.Errorf("error reading login HTML file from %s: %v", config.LoginHTMLPath, err)
 	}
-
 	// Parse the template
-	tmpl, err := template.New("login").Parse(string(loginHTMLBytes))
+	tmpl, err := template.New("login").Parse(string(LoginHTMLBytes))
 	if err != nil {
 		return nil, fmt.Errorf("error parsing login template: %v", err)
 	}
@@ -68,11 +72,18 @@ func New(ctx context.Context, next http.Handler, config *Config, name string) (h
 		config: config,
 		next:   next,
 		tmpl:   tmpl,
+		valid:  true,
 	}, nil
 }
 
 // ServeHTTP implements http.Handler
 func (p *PasswordProtect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if !p.valid {
+		os.Stderr.WriteString("[PasswordProtect] Login HTML file does not exist at " + p.config.LoginHTMLPath + "\n")
+		os.Stderr.WriteString("[PasswordProtect] Please check the path and try again as route is unprotected.\n")
+		p.next.ServeHTTP(w, r)
+		return
+	}
 	// Check if the request has a valid session cookie
 	if cookie, err := r.Cookie(cookieName); err == nil {
 		if p.isValidCookie(cookie.Value) {
