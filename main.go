@@ -130,7 +130,7 @@ func (p *PasswordProtect) showLoginPage(w http.ResponseWriter, message string) {
 func (p *PasswordProtect) signCookie(sessionID string) string {
 	h := hmac.New(sha256.New, []byte(p.config.Password))
 	h.Write([]byte(sessionID))
-	signature := base64.StdEncoding.EncodeToString(h.Sum(nil))
+	signature := base64.URLEncoding.EncodeToString(h.Sum(nil))
 	return sessionID + "." + signature
 }
 
@@ -142,6 +142,12 @@ func (p *PasswordProtect) isValidCookie(cookieValue string) bool {
 	}
 
 	sessionID := parts[0]
-	expectedSignature := p.signCookie(sessionID)
-	return cookieValue == expectedSignature
+	receivedSignature := parts[1]
+
+	// Generate expected signature
+	h := hmac.New(sha256.New, []byte(p.config.Password))
+	h.Write([]byte(sessionID))
+	expectedSignature := base64.URLEncoding.EncodeToString(h.Sum(nil))
+
+	return receivedSignature == expectedSignature
 }
