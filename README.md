@@ -51,7 +51,7 @@ http:
       entryPoints:
         - web
       middlewares:
-        - password-protect
+        - password-protect1
 
   services:
     service-foo:
