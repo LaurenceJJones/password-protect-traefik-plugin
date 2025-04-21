@@ -85,7 +85,7 @@ func (p *PasswordProtect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Handle form submission with password
 	if r.Method == http.MethodPost {
 		if err := r.ParseForm(); err == nil {
-			password := r.Form.Get("ssp-password")
+			password := r.Form.Get("spp-password")
 			if password == p.config.Password {
 				// Password is correct, create a session and redirect back to the same page
 				sessionID := uuid.New().String()
