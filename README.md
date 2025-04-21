@@ -16,7 +16,7 @@ We migrated our deployments away from Vercel and still wanted to keep password p
 
 Firstly you should download the `login.html` file under `templates/dist/` as we need this page to be mounted to `/login.html` within the traefik container since we cant compile the `login.html` into the source code:
 
-```
+```yaml
 services:
   traefik:
     image: "traefik:v3.0.0"
