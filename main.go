@@ -24,6 +24,7 @@ type Config struct {
 type LoginPage struct {
 	Title   string
 	Message string
+	Theme   string
 }
 
 const (
@@ -97,6 +98,7 @@ func (p *PasswordProtect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		if err := r.ParseForm(); err == nil {
 			password := r.Form.Get("spp-password")
+			theme := r.Form.Get("spp-theme")
 			if password == p.config.Password {
 				// Password is correct, create a session and redirect back to the same page
 				sessionID := uuid.New().String()
@@ -115,21 +117,22 @@ func (p *PasswordProtect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			// Incorrect password, show login page with error
-			p.showLoginPage(w, "Invalid password. Please try again.")
+			// Incorrect password, show login page with error and preserve theme
+			p.showLoginPage(w, "Invalid password. Please try again.", theme)
 			return
 		}
 	}
 
 	// Show login page for GET requests or if POST handling failed
-	p.showLoginPage(w, "")
+	p.showLoginPage(w, "", "")
 }
 
 // showLoginPage renders the login page
-func (p *PasswordProtect) showLoginPage(w http.ResponseWriter, message string) {
+func (p *PasswordProtect) showLoginPage(w http.ResponseWriter, message string, theme string) {
 	data := LoginPage{
 		Title:   "Password Protected",
 		Message: message,
+		Theme:   theme,
 	}
 
 	w.Header().Set("Content-Type", "text/html")

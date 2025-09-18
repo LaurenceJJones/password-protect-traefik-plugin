@@ -23,13 +23,34 @@
         // Simple light/dark mode toggle
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
+            updateThemeField();
         }
 
-        // Initialize dark mode based on user preference
-        function initDarkMode() {
-            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                document.documentElement.classList.add('dark');
+        // Update the hidden theme field with current theme state
+        function updateThemeField() {
+            var themeField = document.getElementById('themeField');
+            if (themeField) {
+                themeField.value = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
             }
+        }
+
+        // Initialize dark mode based on server preference or user preference
+        function initDarkMode() {
+            var serverTheme = '{{ .Theme }}';
+            if (serverTheme === 'dark' || serverTheme === 'light') {
+                // Use server-provided theme
+                if (serverTheme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } else {
+                // Fall back to system preference
+                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.classList.add('dark');
+                }
+            }
+            updateThemeField();
         }
     </script>
 </head>
@@ -53,6 +74,7 @@
         {{end}}
         
         <form method="POST" class="space-y-4">
+            <input type="hidden" id="themeField" name="spp-theme" value="" />
             <div>
                 <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
                 <input type="password" id="password" name="spp-password" required class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-600" />
