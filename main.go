@@ -98,7 +98,7 @@ func (p *PasswordProtect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		if err := r.ParseForm(); err == nil {
 			password := r.Form.Get("spp-password")
-			theme := r.Form.Get("spp-theme")
+			theme := p.sanitizeTheme(r.Form.Get("spp-theme"))
 			if password == p.config.Password {
 				// Password is correct, create a session and redirect back to the same page
 				sessionID := uuid.New().String()
@@ -164,4 +164,14 @@ func (p *PasswordProtect) isValidCookie(cookieValue string) bool {
 	expectedSignature := base64.URLEncoding.EncodeToString(h.Sum(nil))
 
 	return receivedSignature == expectedSignature
+}
+
+// sanitizeTheme validates and sanitizes the theme value to prevent XSS
+func (p *PasswordProtect) sanitizeTheme(theme string) string {
+	// Only allow "light" or "dark" values, reject everything else
+	if theme == "light" || theme == "dark" {
+		return theme
+	}
+	// Return empty string for any invalid input
+	return ""
 }
